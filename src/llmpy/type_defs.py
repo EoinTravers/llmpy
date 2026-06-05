@@ -83,7 +83,7 @@ class LLMClientProtocol(Protocol):
         ...
 
     @overload  # Variant with no response format
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],
@@ -95,7 +95,7 @@ class LLMClientProtocol(Protocol):
         ...
 
     @overload  # Variant with a response format
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],
@@ -106,7 +106,7 @@ class LLMClientProtocol(Protocol):
         """Call the LLM with a system prompt and a user prompt in batch mode."""
         ...
 
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],

@@ -31,7 +31,7 @@ class _MockLLMClient:
             return f"async:{user_prompt}"
         return response_format(answer=user_prompt, confidence=0.8)
 
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt,
         user_prompt,
@@ -126,33 +126,33 @@ def test_call_async_with_format_returns_model(client):
     assert isinstance(result, _SampleResponse)
 
 
-# --- call_batch ---
+# --- call_many ---
 
-def test_call_batch_returns_list_of_str(client):
-    result = asyncio.run(client.call_batch("sys", ["a", "b", "c"]))
+def test_call_many_returns_list_of_str(client):
+    result = asyncio.run(client.call_many("sys", ["a", "b", "c"]))
     assert isinstance(result, list)
     assert len(result) == 3
     assert all(isinstance(r, str) for r in result)
 
 
-def test_call_batch_with_format_returns_list_of_models(client):
+def test_call_many_with_format_returns_list_of_models(client):
     result = asyncio.run(
-        client.call_batch("sys", ["a", "b"], response_format=_SampleResponse)
+        client.call_many("sys", ["a", "b"], response_format=_SampleResponse)
     )
     assert len(result) == 2
     assert all(isinstance(r, _SampleResponse) for r in result)
 
 
-def test_call_batch_per_prompt_systems(client):
+def test_call_many_per_prompt_systems(client):
     result = asyncio.run(
-        client.call_batch(["sys1", "sys2"], ["a", "b"])
+        client.call_many(["sys1", "sys2"], ["a", "b"])
     )
     assert len(result) == 2
 
 
-def test_call_batch_length_matches_prompts(client):
+def test_call_many_length_matches_prompts(client):
     prompts = ["x", "y", "z", "w"]
-    result = asyncio.run(client.call_batch("sys", prompts))
+    result = asyncio.run(client.call_many("sys", prompts))
     assert len(result) == len(prompts)
 
 
@@ -192,6 +192,6 @@ def test_mock_satisfies_protocol():
     """
     required = {
         "count_tokens", "embed", "call", "call_async",
-        "call_batch", "send_messages", "send_messages_async",
+        "call_many", "send_messages", "send_messages_async",
     }
     assert required.issubset(dir(_MockLLMClient))

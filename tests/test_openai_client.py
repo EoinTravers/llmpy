@@ -106,39 +106,39 @@ def test_call_async_response_format_returns_model(client):
     assert result.word == "hi"
 
 
-# --- call_batch ---
+# --- call_many ---
 
-def test_call_batch_returns_list_of_str(client):
+def test_call_many_returns_list_of_str(client):
     async def _fake(**kwargs):
         return _make_completion("ok")
 
     with patch.object(client._async_client.chat.completions, "create", side_effect=_fake):
-        results = asyncio.run(client.call_batch("sys", ["p1", "p2"], progress=False))
+        results = asyncio.run(client.call_many("sys", ["p1", "p2"], progress=False))
     assert results == ["ok", "ok"]
 
 
-def test_call_batch_length_matches_prompts(client):
+def test_call_many_length_matches_prompts(client):
     async def _fake(**kwargs):
         return _make_completion("x")
 
     with patch.object(client._async_client.chat.completions, "create", side_effect=_fake):
-        results = asyncio.run(client.call_batch("sys", ["a", "b", "c"], progress=False))
+        results = asyncio.run(client.call_many("sys", ["a", "b", "c"], progress=False))
     assert len(results) == 3
 
 
-def test_call_batch_per_system_prompt(client):
+def test_call_many_per_system_prompt(client):
     async def _fake(**kwargs):
         return _make_completion("x")
 
     with patch.object(client._async_client.chat.completions, "create", side_effect=_fake):
         results = asyncio.run(
-            client.call_batch(["sys1", "sys2"], ["p1", "p2"], progress=False)
+            client.call_many(["sys1", "sys2"], ["p1", "p2"], progress=False)
         )
     assert len(results) == 2
     assert all(isinstance(r, str) for r in results)
 
 
-def test_call_batch_response_format_returns_list_of_models(client):
+def test_call_many_response_format_returns_list_of_models(client):
     class _G(BaseModel):
         word: str
 
@@ -153,7 +153,7 @@ def test_call_batch_response_format_returns_list_of_models(client):
 
     with patch.object(client._async_client.chat.completions, "create", side_effect=_fake):
         results = asyncio.run(
-            client.call_batch("sys", ["p1", "p2"], response_format=_G, progress=False)
+            client.call_many("sys", ["p1", "p2"], response_format=_G, progress=False)
         )
     assert all(isinstance(r, _G) for r in results)
     assert [r.word for r in results] == ["hello", "bye"]

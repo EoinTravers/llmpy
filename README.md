@@ -60,7 +60,7 @@ print(one_result)
 
 ```python
 # Classify everything in parallel
-results = await llm_client.call_batch(
+results = await llm_client.call_many(
     system_prompt=system_prompt, user_prompt=review_df["text"], max_requests_per_minute=100
 )
 print(results)
@@ -83,7 +83,7 @@ from typing import Literal
 class Sentiment(BaseModel):
     value: Literal['Positive', 'Negative', 'Neutral']
 
-structured_results = await llm_client.call_batch(
+structured_results = await llm_client.call_many(
     system_prompt=system_prompt, user_prompt=review_df["text"],
     max_requests_per_minute=100,
     response_format=Sentiment
@@ -117,7 +117,7 @@ class ReviewAnnotations(BaseModel):
     subject_type: str | None = Field(description="What kind of person/place is being reviewed? Leave blank if unknown")
     sentiment: Literal['Positive', 'Negative', 'Neutral']
 
-structured_results = await llm_client.call_batch(
+structured_results = await llm_client.call_many(
     system_prompt="Extract the information required", user_prompt=review_df["text"],
     max_requests_per_minute=100,
     response_format=ReviewAnnotations

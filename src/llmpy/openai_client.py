@@ -1,5 +1,4 @@
 import asyncio
-import json
 import random
 import time
 from typing import Any, cast, overload
@@ -234,7 +233,7 @@ class OpenAIClient(LLMClientProtocol):
         return response_format.model_validate_json(content)
 
     @overload
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],
@@ -247,7 +246,7 @@ class OpenAIClient(LLMClientProtocol):
     ) -> list[str]: ...
 
     @overload
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],
@@ -259,7 +258,7 @@ class OpenAIClient(LLMClientProtocol):
         **kwargs,
     ) -> list[ResponseFormatType]: ...
 
-    async def call_batch(
+    async def call_many(
         self,
         system_prompt: str | list[str],
         user_prompt: str | list[str],
@@ -302,7 +301,7 @@ class OpenAIClient(LLMClientProtocol):
             return self._client.chat.completions.create(
                 model=self.model,
                 messages=cast(list[Any], messages),
-                max_completion_tokens=self.max_completion_tokens,
+                max_completion_tokens=self.max_tokens,
                 timeout=timeout,
                 **kwargs,
             )

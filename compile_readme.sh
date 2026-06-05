@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DOCS_DIR="docs"
-OUT="README.md"
+OUT="README_compiled.md"
 TMP_DIR=$(mktemp -d)
 
 # Process each doc file in numbered order
@@ -11,7 +11,7 @@ for f in $(ls "$DOCS_DIR" | sort); do
     case "$f" in
         *.ipynb)
             out="$TMP_DIR/${f%.ipynb}.md"
-            uv run jupyter nbconvert --to markdown --execute --output "$out" "$path"
+            uv run jupyter nbconvert --to markdown  --output "$out" "$path"
             cat "$out" >> "$TMP_DIR/combined.md"
             ;;
         *.md)
