@@ -23,18 +23,19 @@ llm_client = OpenAIClient(api_key=OPENAI_API_KEY, model="gpt-5.4-mini")
 
 ```python
 # Get some data
-from re import L
 from datasets import load_dataset
 import itertools
 import pandas as pd
 
-ds = load_dataset("Yelp/yelp_review_full", streaming=True, split="train")
-review_df = pd.DataFrame(itertools.islice(ds, 20))
+def get_n_rows_from_hf(dataset: str, n_rows: int):
+    ds = load_dataset(dataset, streaming=True, split="train")
+    return pd.DataFrame(itertools.islice(ds, n_rows))
+
+
+review_df = get_n_rows_from_hf("Yelp/yelp_review_full", 20)
 for txt in review_df['text'].iloc[:2]:
     print(txt)
 ```
-
-
 
     dr. goldberg offers everything i look for in a general practitioner.  he's nice and easy to talk to without being patronizing; he's always on time in seeing his patients; he's affiliated with a top-notch hospital (nyu) which my parents have explained to me is very important in case something happens and you need surgery; and you can get referrals to see specialists without having to see him first.  really, what more do you need?  i'm sitting here trying to think of any complaints i have about him, but i'm really drawing a blank.
     Unfortunately, the frustration of being Dr. Goldberg's patient is a repeat of the experience I've had with so many other doctors in NYC -- good doctor, terrible staff.  It seems that his staff simply never answers the phone.  It usually takes 2 hours of repeated calling to get an answer.  Who has time for that or wants to deal with it?  I have run into this problem with many other doctors and I just don't get it.  You have office workers, you have patients with medical needs, why isn't anyone answering the phone?  It's incomprehensible and not work the aggravation.  It's with regret that I feel that I have to give Dr. Goldberg 2 stars.
@@ -118,7 +119,7 @@ class ReviewAnnotations(BaseModel):
     sentiment: Literal['Positive', 'Negative', 'Neutral']
 
 structured_results = await llm_client.call_many(
-    system_prompt="Extract the information required", user_prompt=review_df["text"],
+  system_prompt="Extract the information required", user_prompt=review_df["text"],
     max_requests_per_minute=100,
     response_format=ReviewAnnotations
 )
@@ -128,7 +129,7 @@ result_df
 
 ```
 
-    
+
 
 
 
@@ -286,6 +287,210 @@ result_df
   </tbody>
 </table>
 
+```python
+## Example 3: Tagging
+# soflow_df = get_n_rows_from_hf("mirzaei2114/stackoverflowVQA", 20)
+soflow_df['Text'] = soflow_df['Title'] + '\n\n' + soflow_df['Body']
+soflow_df = soflow_df[['Text', 'Tags']]
+soflow_df.head()
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Text</th>
+      <th>Tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>How do I calculate these statistics?\n\nI'm wr...</td>
+      <td>[statistics, spss]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Auto Generate Database Diagram MySQL\n\nI'm ti...</td>
+      <td>[mysql, database, database-design, diagram]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Plugin for Visual Studio to Mimic Eclipse's "O...</td>
+      <td>[visual-studio, plugins]</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>How to create a tree-view preferences dialog t...</td>
+      <td>[c#, user-interface]</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Territory Map Generation\n\nIs there a trivial...</td>
+      <td>[language-agnostic, maps, voronoi]</td>
+    </tr>
+  </tbody>
+</table>
+
+```python
+possible_tags = soflow_df['Tags'].explode().unique().tolist()
+print(possible_tags)
+```
+
+    ['statistics', 'spss', 'mysql', 'database', 'database-design', 'diagram', 'visual-studio', 'plugins', 'c#', 'user-interface', 'language-agnostic', 'maps', 'voronoi', 'javascript', 'html', 'css', 'textarea', 'prototypejs', 'security', 'captcha', 'asp.net', 'apache-flex', 'actionscript-3', '.net', 'reflector', 'unit-testing', 'configuration', 'vsx', 'extensibility', 'asp.net-mvc', 'forms', 'exception', 'mvp', 'n-tier-architecture', 'eclipse', 'pdf', 'coldfusion', 'file', 'ftp', 'symlink', 'php', 'performance', 'caching', 'firefox', 'drop-down-menu', 'html-select', 'java', 'editor', 'vb.net', 'prettify']
+
+
+
+```python
+class QuestionTags(BaseModel):
+    tags: list[Literal[*possible_tags]] | None # type: ignore
+
+tagging_results = await llm_client.call_many(
+    "Select all the tags that apply to this question. Leave blank if none apply",
+    soflow_df['Text'],
+    response_format=QuestionTags
+)
+soflow_df['inferred_tags'] = [r.tags for r in tagging_results]
+soflow_df
+```
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Text</th>
+      <th>Tags</th>
+      <th>inferred_tags</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>How do I calculate these statistics?\n\nI'm wr...</td>
+      <td>[statistics, spss]</td>
+      <td>[statistics, spss]</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>Auto Generate Database Diagram MySQL\n\nI'm ti...</td>
+      <td>[mysql, database, database-design, diagram]</td>
+      <td>[mysql, database, diagram]</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>Plugin for Visual Studio to Mimic Eclipse's "O...</td>
+      <td>[visual-studio, plugins]</td>
+      <td>[visual-studio, plugins, c#]</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>How to create a tree-view preferences dialog t...</td>
+      <td>[c#, user-interface]</td>
+      <td>[c#, user-interface, .net, forms, mvp]</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>Territory Map Generation\n\nIs there a trivial...</td>
+      <td>[language-agnostic, maps, voronoi]</td>
+      <td>[javascript, html, maps, voronoi, language-agn...</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>How to autosize a textarea using Prototype?\n\...</td>
+      <td>[javascript, html, css, textarea, prototypejs]</td>
+      <td>[javascript, html, textarea, prototypejs, user...</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>Practical non-image based CAPTCHA approaches?\...</td>
+      <td>[security, language-agnostic, captcha]</td>
+      <td>[javascript, html, css, captcha, security, asp...</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>Calculate DateTime Weeks into Rows\n\nI am cur...</td>
+      <td>[c#, asp.net]</td>
+      <td>[c#, asp.net, forms, language-agnostic]</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>How do I restyle an Adobe Flex Accordion to in...</td>
+      <td>[apache-flex, actionscript-3]</td>
+      <td>[html, css, javascript, user-interface]</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>Have you ever reflected Reflector?\n\nLutz Roe...</td>
+      <td>[.net, reflector]</td>
+      <td>[reflector, .net]</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>How do I run (unit) tests in different folders...</td>
+      <td>[visual-studio, unit-testing, configuration, v...</td>
+      <td>[visual-studio, unit-testing, n-tier-architect...</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>What is the best way to write a form in ASP.NE...</td>
+      <td>[asp.net-mvc, forms]</td>
+      <td>[asp.net-mvc, forms]</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>How Do You Communicate Service Layer Messages/...</td>
+      <td>[c#, asp.net, exception, mvp, n-tier-architect...</td>
+      <td>[asp.net, exception, mvp, language-agnostic]</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>Cannot add a launch shortcut (Eclipse Plug-in)...</td>
+      <td>[eclipse, plugins]</td>
+      <td>[eclipse, plugins, java]</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>Why is my PDF footer text invisible?\n\nI'm cr...</td>
+      <td>[pdf, coldfusion]</td>
+      <td>[pdf, coldfusion, html, css]</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>Cannot delete, a file with that name may alrea...</td>
+      <td>[file, ftp, symlink]</td>
+      <td>[php, file, ftp, symlink]</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>Which PHP opcode cacher should I use to improv...</td>
+      <td>[php, performance, caching]</td>
+      <td>[php, performance, caching]</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>HTML Select Tag with black background - dropdo...</td>
+      <td>[html, css, firefox, drop-down-menu, html-select]</td>
+      <td>[html, css, firefox]</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>Is there a Java Console/Editor similar to the ...</td>
+      <td>[java, editor]</td>
+      <td>[java, editor]</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>Is there a lang-vb or lang-basic option for pr...</td>
+      <td>[javascript, vb.net, prettify]</td>
+      <td>[language-agnostic, prettify]</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+Easy!
 
 
 # Development

@@ -26,6 +26,7 @@ dev-dependencies = [
     "ty>=0.0.43",
     "datasets>=5.0.0",
     "nbconvert>=7.17.1",
+    "nbstripout>=0.9.1",
 ]
 
 [tool.pytest.ini_options]
