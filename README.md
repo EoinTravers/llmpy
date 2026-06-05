@@ -118,7 +118,7 @@ class ReviewAnnotations(BaseModel):
     sentiment: Literal['Positive', 'Negative', 'Neutral']
 
 structured_results = await llm_client.call_batch(
-    system_prompt=system_prompt, user_prompt=review_df["text"],
+    system_prompt="Extract the information required", user_prompt=review_df["text"],
     max_requests_per_minute=100,
     response_format=ReviewAnnotations
 )
@@ -132,20 +132,6 @@ result_df
 
 
 
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
@@ -299,7 +285,6 @@ result_df
     </tr>
   </tbody>
 </table>
-</div>
 
 
 
