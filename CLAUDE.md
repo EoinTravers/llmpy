@@ -14,9 +14,9 @@ uv run ty src                  # type check
 
 ## Architecture
 
-This is a library (`llmpy`) defining a standard interface for LLM clients.
+This is a library (`dsllmpy`) defining a standard interface for LLM clients.
 
-**`src/llm.py`** — the central artifact: `LLMClientProtocol`, a `typing.Protocol` that any LLM client implementation must satisfy. It is imported as `from llm import LLMClientProtocol` (top-level `src/` module, not inside the `llmpy` package).
+**`src/llm.py`** — the central artifact: `LLMClientProtocol`, a `typing.Protocol` that any LLM client implementation must satisfy. It is imported as `from llm import LLMClientProtocol` (top-level `src/` module, not inside the `dsllmpy` package).
 
 The protocol defines:
 - `call` / `call_async` / `call_many` — overloaded so that passing `response_format=None` returns `str`, passing a Pydantic `BaseModel` subclass returns an instance of that type.
@@ -25,6 +25,6 @@ The protocol defines:
 - `embed` — returns `list[list[float]]` for one or more input strings.
 - `count_tokens` — returns `int`.
 
-**`src/llmpy/`** — the installable package; currently a stub. New implementations of `LLMClientProtocol` should live here and be exported from `__init__.py`.
+**`src/dsllmpy/`** — the installable package; currently a stub. New implementations of `LLMClientProtocol` should live here and be exported from `__init__.py`.
 
 **`tests/test_llm.py`** — validates the protocol contract using `_MockLLMClient`, a minimal conforming implementation. New protocol methods need corresponding tests here.

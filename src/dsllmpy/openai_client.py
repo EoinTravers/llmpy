@@ -43,7 +43,7 @@ def _should_retry(exc: Exception) -> bool:
         return True
     if isinstance(exc, RateLimitError):
         return True
-    if isinstance(exc, APIError) and exc.status_code is not None and exc.status_code >= 500:
+    if isinstance(exc, APIError) and (getattr(exc, "status_code", None) or 0) >= 500:
         return True
     return False
 
@@ -320,7 +320,7 @@ class OpenAIClient(LLMClientProtocol):
             return self._async_client.chat.completions.create(
                 model=self.model,
                 messages=cast(list[Any], messages),
-                max_completion_tokens=self.max_completion_tokens,
+                max_completion_tokens=self.max_tokens,
                 **kwargs,
             )
 

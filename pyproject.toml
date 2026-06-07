@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "llmpy"
+name = "dsllmpy"
 version = "0.1.0"
 description = "Python LLM utilities"
 readme = "README.md"
@@ -31,7 +31,7 @@ dev-dependencies = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=src/llmpy --cov-report=term-missing"
+addopts = "--cov=src/dsllmpy --cov-report=term-missing"
 
 [tool.mypy]
 python_version = "3.12"

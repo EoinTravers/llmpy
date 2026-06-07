@@ -1,18 +1,22 @@
 #  LLMpy
 
 Beyond all the hype, large language models are a powerful tool in the modern data science toolkit.
-`llmpy` (lumpy? yeah, let's go with that) is a small utility package that makes using LLMs in data science work a little bit easier.
+`dsllmpy` (lumpy? yeah, let's go with that) is a small utility package that makes using LLMs in data science work a little bit easier.
 
 The workhorse of LLM-powered data science is the ability to take unstructured text data
 and turn it into useable data, using simple labels, or fancy structured output schemas.
-`llmpy` makes doing this in parallel, over a whole column of values, easy.
+`dsllmpy` makes doing this in parallel, over a whole column of values, easy.
+
+![](docs/dsdsllmpy_icon.jpeg)
+
+> Meet Detective Sergeant Lumpy
 
 
 ```python
 # Setup
 import os
 from dotenv import load_dotenv
-from llmpy import OpenAIClient
+from dsllmpy import OpenAIClient
 from pydantic import BaseModel
 
 load_dotenv()
@@ -491,6 +495,18 @@ soflow_df
 
 
 Easy!
+
+
+# Next Steps
+
+> Get in touch with any requests
+
+- Finish and document embedding utilities.
+- Topic modelling example.
+- Using the Batch API.
+- Analytics engineering use-cases with dbt/dagster.
+
+
 
 
 # Development

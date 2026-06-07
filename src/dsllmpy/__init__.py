@@ -2,6 +2,6 @@
 
 __version__ = "0.1.0"
 
-from llmpy.openai_client import OpenAIClient
+from dsllmpy.openai_client import OpenAIClient
 
 __all__ = ["OpenAIClient"]
